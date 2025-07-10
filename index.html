@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>GTCA iOS QR Check-In</title>
+  <title>GTCA QR Check-In (iOS only)</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     body {
@@ -20,8 +20,6 @@
     }
     select, button {
       margin-top: 10px;
-      padding: 10px;
-      font-size: 16px;
     }
   </style>
 </head>
@@ -56,17 +54,21 @@
         const resultDiv = document.getElementById("result");
         resultDiv.innerHTML = "";
 
-        if ((clazz || "").toLowerCase() !== "paid") {
+        if (clazz.toLowerCase() !== "paid") {
           resultDiv.innerHTML = "<h3>❌ Access Denied</h3><p>User hasn't paid.</p>";
           return;
         }
 
-        // Entry type dropdown
+        // ✅ Fixed entry type dropdown
         const entryTypeSelect = document.createElement("select");
-        ["Check In", "Check Out"].forEach(type => {
+        const entryTypes = [
+          { label: "Check In", value: "checkin" },
+          { label: "Check Out", value: "checkout" }
+        ];
+        entryTypes.forEach(({ label, value }) => {
           const opt = document.createElement("option");
-          opt.value = type.toLowerCase();
-          opt.text = type;
+          opt.value = value;
+          opt.text = label;
           entryTypeSelect.appendChild(opt);
         });
 
@@ -85,7 +87,7 @@
         submitBtn.onclick = () => {
           const type = entryTypeSelect.value;
           const room = roomSelect.value;
-          const day = "Day 1"; // Or use dynamic day dropdown if needed
+          const day = "Day 1"; // Or dynamic if needed
 
           const formData = new FormData();
           formData.append("key", API_KEY);
@@ -97,10 +99,6 @@
           formData.append("type", type);
           formData.append("day", day);
 
-          // Disable button while sending
-          submitBtn.disabled = true;
-          submitBtn.textContent = "Submitting...";
-
           fetch(SCRIPT_URL, {
             method: "POST",
             body: formData,
@@ -108,23 +106,8 @@
           .then(res => res.text())
           .then(response => {
             console.log("Server response:", response);
-
-            // Re-enable button
-            submitBtn.disabled = false;
-            submitBtn.textContent = "Submit Entry";
-
             if (response.includes("Success")) {
-              resultDiv.innerHTML = `
-                <h3>✅ Success</h3>
-                <p>Added to database.</p>
-                <p><b>Name:</b> ${name}</p>
-                <p><b>Committee:</b> ${committee}</p>
-                <p><b>Class:</b> ${clazz}</p>
-                <p><b>School:</b> ${school}</p>
-                <p><b>Room:</b> ${room}</p>
-                <p><b>Type:</b> ${type}</p>
-                <p><b>Day:</b> ${day}</p>
-              `;
+              alert("✅ Success: Added to database.");
             } else {
               alert("❌ Server error: " + response);
             }
@@ -132,12 +115,10 @@
           .catch(err => {
             console.error("Fetch error:", err);
             alert("⚠️ Network error: " + err.message);
-            submitBtn.disabled = false;
-            submitBtn.textContent = "Submit Entry";
           });
         };
 
-        // Display form
+        // Show user data and controls
         resultDiv.innerHTML = `
           <p><b>Name:</b> ${name}</p>
           <p><b>Committee:</b> ${committee}</p>
@@ -149,7 +130,6 @@
         resultDiv.appendChild(submitBtn);
       }
 
-      // Start QR scanner
       const html5QrCode = new Html5Qrcode("reader");
       html5QrCode.start(
         { facingMode: "environment" },
@@ -158,11 +138,11 @@
           qrbox: { width: 250, height: 250 }
         },
         qrCodeMessage => {
-          html5QrCode.stop();
+          html5QrCode.stop();  // stop scanning after successful scan
           showOptions(qrCodeMessage);
         },
         errorMessage => {
-          // Optionally handle scanning errors here
+          // silently ignore errors
         }
       ).catch(err => {
         document.getElementById("reader").innerText = "Camera access failed: " + err;
