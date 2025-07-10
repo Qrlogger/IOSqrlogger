@@ -93,21 +93,23 @@
           formData.append("day", day);
 
           fetch(SCRIPT_URL, {
-            method: "POST",
-            body: formData,
-          })
-            .then(res => res.text())
-            .then(response => {
-              if (response.includes("Success")) {
-                alert("✅ Success: Added to database.");
-              } else {
-                alert("❌ Server error: " + response);
-              }
-            })
-            .catch(err => {
-              alert("⚠️ Network error: " + err.message);
-            });
-        };
+  method: "POST",
+  body: formData,
+})
+.then(res => res.text())
+.then(response => {
+  console.log("Server response:", response);  // 🔍 log to browser console
+  if (response.includes("Success")) {
+    alert("✅ Success: Added to database.");
+  } else {
+    alert("❌ Server error: " + response);
+  }
+})
+.catch(err => {
+  console.error("Fetch error:", err);
+  alert("⚠️ Network error: " + err.message);
+});
+
 
         resultDiv.innerHTML = `
           <p><b>Name:</b> ${name}</p>
